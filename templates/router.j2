@@ -1,0 +1,43 @@
+{% for lb in loopbacks %}
+int {{ lb.interface }}
+{% if lb.vrf %}
+ ip vrf forwarding {{ lb.vrf }}
+{% endif %}
+ ip address {{ lb.ip }} {{ lb.mask }}
+ exit
+{% endfor %}
+{% if ospf %}
+router ospf {{ ospf.process_id }}{% if ospf.vrf %} vrf {{ ospf.vrf }}{% endif %}
+
+ router-id {{ ospf.router_id }}
+{% for net in ospf.networks %}
+ network {{ net.network }} {{ net.wildcard }} area {{ net.area }}
+{% endfor %}
+{% if ospf.default_information_originate %}
+ default-information originate
+{% endif %}
+ exit
+{% endif %}
+{% if static_routes %}
+{% for r in static_routes %}
+ip route{% if r.vrf %} vrf {{ r.vrf }}{% endif %} {{ r.prefix }} {{ r.mask }} {{ r.interface }}
+{% endfor %}
+{% endif %}
+{% if nat %}
+ip access-list standard {{ nat.acl_name }}
+ permit {{ nat.permit_network }} {{ nat.permit_wildcard }}
+ exit
+{% for intf in nat.inside_interfaces %}
+int {{ intf }}
+ ip nat inside
+ exit
+{% endfor %}
+{% for intf in nat.outside_interfaces %}
+int {{ intf }}
+ ip nat outside
+ exit
+{% endfor %}
+no ip nat inside source list 1 interface {{ nat.outside_interface }} overload
+ip nat inside source list {{ nat.acl_name }} interface {{ nat.outside_interface }} vrf {{ nat.vrf }} overload
+{% endif %}
+{% include 'mgmt_access.j2' %}

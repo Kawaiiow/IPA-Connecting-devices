@@ -1,0 +1,12 @@
+{% for vlan in vlans %}
+vlan {{ vlan.id }}
+ name {{ vlan.name }}
+ exit
+{% endfor %}
+{% for port in access_ports %}
+int {{ port.interface }}
+ switchport mode access
+ switchport access vlan {{ port.vlan }}
+ exit
+{% endfor %}
+{% include 'mgmt_access.j2' %}

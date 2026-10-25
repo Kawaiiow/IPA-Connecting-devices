@@ -1,0 +1,8 @@
+ip access-list standard MGMT_ACCESS
+ permit {{ mgmt_network }} {{ mgmt_wildcard }}
+ permit {{ cloud_network }} {{ cloud_wildcard }}
+ deny any log
+ exit
+line vty 0 4
+ access-class MGMT_ACCESS in
+ exit
